@@ -17,7 +17,7 @@ const DeleteProduct = ({ product }: { product: Product }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsloading] = React.useState(false);
   const [alertSuccess, setAlertSuccess] = React.useState(false);
-  const [messageSuccess, setMessageSuccess] = React.useState("");
+  const [messageSuccess, setMessageSuccess] = React.useState("" || []);
   const router = useRouter();
 
   const handleModal = () => {
@@ -33,7 +33,7 @@ const DeleteProduct = ({ product }: { product: Product }) => {
       setTimeout(() => {
         setIsOpen(false);
         setAlertSuccess(false)
-        setMessageSuccess("")
+        setMessageSuccess("" || [])
         router.refresh();
       }, 2000)
     } catch (error) {
@@ -53,7 +53,7 @@ const DeleteProduct = ({ product }: { product: Product }) => {
        <div className="absolute z-50 -right-8 -top-16">
           <AlertSuccess message={messageSuccess} isOpen={alertSuccess} />
         </div>
-      <div className={isOpen ? "modal modal-open" : "modal"}>
+      <div className={isOpen ? "modal modal-open z-20" : "modal"}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">Are you sure to delete {product.title}?</h3>
             <div className="modal-action">

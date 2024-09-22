@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import type { Product } from "@prisma/client";
-import { handleSuccessReponse } from "../../helpers/responses";
+import { handleErrorResponse, handleSuccessReponse } from "../../helpers/responses";
+import { validateProductData } from "../../validators/productValidator";
 const prisma = new PrismaClient();
 
 export const DELETE = async (request: Request, {params}: {params: {id: string}}) => {
@@ -16,7 +17,13 @@ export const DELETE = async (request: Request, {params}: {params: {id: string}})
 export const PUT = async (request: Request, {params}: {params: {id: string}}) => {
   try {
     const body: Product = await request.json();
-    await prisma.product.update({
+
+    const validatorErrors = validateProductData(body);
+    if(validatorErrors?.length > 0){
+      return handleErrorResponse("Validation failed", validatorErrors, 400);
+    }
+
+    const product = await prisma.product.update({
       where: {id: Number(params.id)},
       data: {
         title: body.title,
@@ -24,8 +31,8 @@ export const PUT = async (request: Request, {params}: {params: {id: string}}) =>
         brandId: body.brandId,
       }
     })
-    return NextResponse.json({status: 200})
+    return handleSuccessReponse(product, "Product updated successfully", 200)
   } catch (error) {
-    console.log(error)
+    return handleErrorResponse("Internal server error", error, 500)
   }
 }

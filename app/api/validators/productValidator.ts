@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 interface ProductData {
+  id: number;
   title: string;
   price: number;
   brandId: number

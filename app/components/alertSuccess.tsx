@@ -1,6 +1,6 @@
 import React from 'react'
 
-const alertSuccess = ({message, isOpen}: {message: string; isOpen: boolean}) => {
+const alertSuccess = ({message, isOpen}: {message: string[]; isOpen: boolean}) => {
   return (
      <div className={isOpen ? "modal-open" : "modal"}>
       <div className='p-5 w-64 bg-blue-500 flex gap-2.5 rounded-md'>

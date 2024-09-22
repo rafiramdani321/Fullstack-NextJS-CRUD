@@ -4,12 +4,14 @@ import type { Brand } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import AlertError from "../components/alertError";
+import AlertSuccess from "../components/alertSuccess";
 import LoadingSpinner from "../components/loadingSpinner";
 
 const AddProduct = ({ brands }: { brands: Brand[] }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [alertError, setAlertError] = React.useState(false);
-  const [messageError, setMessageError] = React.useState([]);
+  const [modalSuccess, setModalSuccess] = React.useState(false)
+  const [message, setMessage] = React.useState("" || [])
+  const [modalError, setModalError] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     title: "",
@@ -20,7 +22,7 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
 
   const handleModal = () => {
     setIsOpen(!isOpen);
-    setAlertError(false)
+    setModalError(false)
   };
 
   const handleChangeInput = (
@@ -37,7 +39,7 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
     e.preventDefault();
     setIsLoading(true)
     try {
-      await axios.post("/api/products", {
+      const res = await axios.post("/api/products", {
         title: formData.title,
         price: Number(formData.price),
         brandId: Number(formData.brand),
@@ -48,14 +50,20 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
         price: "",
         brand: "",
       });
-      router.refresh();
-      setIsOpen(false);
-    } catch (error: any) {
-      setAlertError(true)
-      setMessageError(error.response.data.errorDetail)
+      setModalSuccess(true)
+      setMessage(res.data.message)
       setTimeout(() => {
-        setAlertError(false)
-        setMessageError([])
+        router.refresh();
+        setIsOpen(false);
+        setModalSuccess(false)
+        setMessage("" || [])
+      },2000)
+    } catch (error: any) {
+      setModalError(true)
+      setMessage(error.response.data.errorDetail)
+      setTimeout(() => {
+        setModalError(false)
+        setMessage("" || [])
       }, 3000)
     }finally{
       setIsLoading(false)
@@ -65,13 +73,14 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
   return (
     <>
     {isLoading ? <LoadingSpinner /> : null}
+    <div className="absolute z-50 right-5 top-5">
+      {modalSuccess ? <AlertSuccess message={message} isOpen={modalSuccess} /> : null}
+      {modalError ? <AlertError message={message} isOpen={modalError} /> : null}
+    </div>
     <div>
       <button className="btn" onClick={handleModal}>
         Add New
       </button>
-        <div className="absolute z-50 right-5 top-5">
-          <AlertError message={messageError} isOpen={alertError} />
-        </div>
       <div className={isOpen ? "modal modal-open z-20" : "modal"}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">Add New Product</h3>

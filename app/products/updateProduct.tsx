@@ -4,6 +4,9 @@ import React, { SyntheticEvent } from 'react';
 import type { Brand } from '@prisma/client';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import AlertError from '../components/alertError';
+import AlertSuccess from '../components/alertSuccess';
+import LoadingSpinner from '../components/loadingSpinner';
 
 type Product = {
   id: number,
@@ -14,6 +17,10 @@ type Product = {
 
 const updateProduct = ({brands, product}: {brands:Brand[]; product: Product }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [modalSuccess, setModalSuccess] = React.useState(false);
+  const [modalError, setModalError] = React.useState(false);
+  const [message, setMessage] = React.useState("" || [])
+  const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter()
   const [formData, setFormData] = React.useState({
     title: product.title,
@@ -37,21 +44,45 @@ const updateProduct = ({brands, product}: {brands:Brand[]; product: Product }) =
 
   const handleUpdateProduct = async (e: SyntheticEvent) => {
     e.preventDefault();
-    await axios.put(`/api/products/${product.id}`, {
-      title: formData.title,
-      price: Number(formData.price),
-      brandId: Number(formData.brand)
-    })
-    router.refresh();
-    setIsOpen(false);
+    setIsLoading(true);
+    try {
+      const res = await axios.put(`/api/products/${product.id}`, {
+        title: formData.title,
+        price: Number(formData.price),
+        brandId: Number(formData.brand)
+      })
+      setModalSuccess(true);
+      setMessage(res.data.message);
+      setTimeout(() => {
+        router.refresh();
+        setIsOpen(false);
+        setModalSuccess(false);
+        setMessage("" || [])
+      }, 2000)
+    } catch (error: any) {
+      setModalError(true);
+      setMessage(error.response.data.errorDetail);
+      setTimeout(() => {
+        setModalError(false);
+        setMessage("" || [])
+      }, 3000)
+    }finally{
+      setIsLoading(false);
+    }
   }
 
   return (
+    <>
+    {isLoading ? <LoadingSpinner /> : null}
+    <div className="absolute z-50 -right-6 -top-20">
+      {modalSuccess ? <AlertSuccess message={message} isOpen={modalSuccess} /> : null}
+      {modalError ? <AlertError message={message} isOpen={modalError} /> : null}
+      </div>
     <div>
       <button className='btn btn-primary btn-sm' onClick={handleModal}>
         Update
       </button>
-      <div className={isOpen ? "modal modal-open" : "modal"}>
+      <div className={isOpen ? "modal modal-open z-20" : "modal"}>
         <div className='modal-box'>
           <h3 className="font-bold text-lg">Update Product</h3>
           <form onSubmit={handleUpdateProduct}>
@@ -106,6 +137,7 @@ const updateProduct = ({brands, product}: {brands:Brand[]; product: Product }) =
         </div>
       </div>
     </div>
+    </>
   )
 }
 
