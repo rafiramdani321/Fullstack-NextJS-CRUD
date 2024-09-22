@@ -1,4 +1,4 @@
-import { ValidationError } from "./validationError";
+import { NextResponse } from "next/server";
 
 interface ProductData {
   title: string;
@@ -19,7 +19,5 @@ export const validateProductData = (data: ProductData) => {
     errors.push("Brand is required")
   }
 
-  if(errors.length > 0){
-    throw new ValidationError(errors)
-  }
+  return errors;
 }

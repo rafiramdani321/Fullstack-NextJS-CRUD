@@ -3,15 +3,17 @@ import { PrismaClient } from "@prisma/client";
 import type { Product } from "@prisma/client";
 import { handleErrorResponse, handleSuccessReponse } from "../helpers/responses";
 import { validateProductData } from "../validators/productValidator";
-import { ValidationError } from "../validators/validationError";
 const prisma = new PrismaClient();
 
 export const POST = async (request: Request) => {
   try {
     const body: Product = await request.json();
-    
-    validateProductData(body)
-    
+
+    const validatorErrors = validateProductData(body);
+    if(validatorErrors?.length > 0){
+      return handleErrorResponse("Validation failed", validatorErrors, 400);
+    }
+
     const product = await prisma.product.create({
       data: {
         title: body.title,
@@ -19,11 +21,9 @@ export const POST = async (request: Request) => {
         brandId: body.brandId
       }
     })
+    
     return handleSuccessReponse(product, "Product successfully added", 201)
   } catch (error) {
-    if(error instanceof ValidationError){
-      return handleErrorResponse("Validation failed", error.errors, 400)
-    }
-    return handleErrorResponse("Product creation failed", error, 500)
+    return handleErrorResponse("Internal server error", error, 500);
   }
 }

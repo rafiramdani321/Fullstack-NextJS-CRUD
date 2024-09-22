@@ -3,9 +3,14 @@ import React, { SyntheticEvent } from "react";
 import type { Brand } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import AlertError from "../components/alertError";
+import LoadingSpinner from "../components/loadingSpinner";
 
 const AddProduct = ({ brands }: { brands: Brand[] }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [alertError, setAlertError] = React.useState(false);
+  const [messageError, setMessageError] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     title: "",
     price: "",
@@ -15,6 +20,7 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
 
   const handleModal = () => {
     setIsOpen(!isOpen);
+    setAlertError(false)
   };
 
   const handleChangeInput = (
@@ -29,27 +35,44 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
 
   const handleSaveProduct = async (e: SyntheticEvent) => {
     e.preventDefault();
-    await axios.post("/api/products", {
-      title: formData.title,
-      price: Number(formData.price),
-      brandId: Number(formData.brand),
-    });
-    setFormData({
-      ...formData,
-      title: "",
-      price: "",
-      brand: "",
-    });
-    router.refresh();
-    setIsOpen(false);
+    setIsLoading(true)
+    try {
+      await axios.post("/api/products", {
+        title: formData.title,
+        price: Number(formData.price),
+        brandId: Number(formData.brand),
+      });
+      setFormData({
+        ...formData,
+        title: "",
+        price: "",
+        brand: "",
+      });
+      router.refresh();
+      setIsOpen(false);
+    } catch (error: any) {
+      setAlertError(true)
+      setMessageError(error.response.data.errorDetail)
+      setTimeout(() => {
+        setAlertError(false)
+        setMessageError([])
+      }, 3000)
+    }finally{
+      setIsLoading(false)
+    }
   };
 
   return (
+    <>
+    {isLoading ? <LoadingSpinner /> : null}
     <div>
       <button className="btn" onClick={handleModal}>
         Add New
       </button>
-      <div className={isOpen ? "modal modal-open" : "modal"}>
+        <div className="absolute z-50 right-5 top-5">
+          <AlertError message={messageError} isOpen={alertError} />
+        </div>
+      <div className={isOpen ? "modal modal-open z-20" : "modal"}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">Add New Product</h3>
           <form onSubmit={handleSaveProduct}>
@@ -94,10 +117,10 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
               </select>
             </div>
             <div className="modal-action">
-              <button type="button" className="btn" onClick={handleModal}>
+              <button type="button" disabled={isLoading} className="btn" onClick={handleModal}>
                 Close
               </button>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" disabled={isLoading} className="btn btn-primary">
                 Save
               </button>
             </div>
@@ -105,6 +128,7 @@ const AddProduct = ({ brands }: { brands: Brand[] }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

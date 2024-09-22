@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import type { Product } from "@prisma/client";
+import { handleSuccessReponse } from "../../helpers/responses";
 const prisma = new PrismaClient();
 
 export const DELETE = async (request: Request, {params}: {params: {id: string}}) => {
@@ -9,7 +10,7 @@ export const DELETE = async (request: Request, {params}: {params: {id: string}})
       id: Number(params.id)
     }
   });
-  return NextResponse.json(product, {status: 200});
+  return handleSuccessReponse(product, "Product has been deleted!", 200)
 }
 
 export const PUT = async (request: Request, {params}: {params: {id: string}}) => {
